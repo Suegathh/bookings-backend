@@ -8,14 +8,14 @@ const router = Router();
 router.get("/", getRooms)
 
 //create rooms
-router.post("/", auth, createRoom)
+router.post("/",  createRoom)
 
 //single room
 router.get("/:id", getRoom)
 
 //update room
-router.put("/:id", auth, updateRoom)
+router.put("/:id", updateRoom)
 
 //delete room
-router.delete("/:id", auth, deleteRoom)
+router.delete("/:id", deleteRoom)
 module.exports = router;
