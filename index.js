@@ -7,10 +7,9 @@ const { errorHandler } = require('./middleware/errorHandler');
 const bookingRoutes = require("./routes/bookingRoutes");
 const userRoutes = require("./routes/userRoutes");
 const cookieParser = require("cookie-parser");
-const { auth } = require("./middleware/authMidlleware") 
+const { auth } = require("./middleware/authMidlleware");
 
 const app = express();
-
 const port = process.env.PORT || 5000;
 
 // Connect to the database
@@ -20,14 +19,15 @@ connectDB();
 app.use(cookieParser());
 app.use(express.json());
 
-// Use `auth` middleware for protected routes if needed
-// For example:
-// app.use("/api/protected", auth, protectedRoutes);
-
 // Routes
 app.use("/api/rooms", roomRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/users", userRoutes);
+
+// Default route (prevents "Cannot GET /")
+app.get("/", (req, res) => {
+    res.send("Backend is running...");
+});
 
 app.use(errorHandler);
 
