@@ -1,4 +1,23 @@
+const dotenv = require("dotenv").config();
+const express = require("express");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
+const path = require("path");
+const { errorHandler } = require("./middleware/errorHandler");
+const connectDB = require("./config/db");
+const roomRoutes = require("./routes/roomRoutes");
+const bookingRoutes = require("./routes/bookingRoutes");
+const userRoutes = require("./routes/userRoutes");
+
+const app = express();
+const port = process.env.PORT || 5000;
+
+// Connect to database
+connectDB();
+
+// Middlewares
+app.use(cookieParser());
+app.use(express.json());
 
 // ✅ Allow CORS for both frontends
 app.use(
