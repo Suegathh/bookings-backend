@@ -79,14 +79,29 @@ const loginUser = async (req, res, next) => {
       next(error);
     }
   };
-const logoutUser = async (req, res, next) => {
-  res.cookie("jwt", "", {
-    httpOnly: true,
-    expires: new Date(0),
-    sameSite: "strict",
-  });
-  return res.json({ message: "You have been logged out" });
-};
+  const logoutUser = async (req, res, next) => {
+    try {
+      // Clear the JWT cookie with cross-origin settings
+      res.cookie("jwt", "", {
+        httpOnly: true,
+        expires: new Date(0),
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "none", // Changed to support cross-site cookies
+        domain: '.vercel.app' // Can help with subdomain compatibility
+      });
+  
+      // Explicitly clear the Authorization header
+      res.setHeader('Authorization', '');
+  
+      return res.status(200).json({ 
+        success: true,
+        message: "Logged out successfully" 
+      });
+    } catch (error) {
+      console.error('Logout Error:', error);
+      next(error);
+    }
+  };
 
 module.exports = {
   getUsers,
