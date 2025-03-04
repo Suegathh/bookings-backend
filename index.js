@@ -19,30 +19,18 @@ connectDB();
 app.use(cookieParser());
 app.use(express.json());
 
-// ✅ Allow CORS for both frontends
+// ✅ Simplified CORS Configuration
 app.use(
   cors({
     origin: [
       "https://bookings-admin-one.vercel.app",
-      "https://bookings-client-three.vercel.app",
+      "https://bookings-client-three.vercel.app"
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization"]
   })
 );
-
-// ✅ Manually Allow CORS for All Routes
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", req.headers.origin);
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.header("Access-Control-Allow-Credentials", "true");
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
-  next();
-});
 
 // ✅ API Routes
 app.use("/api/rooms", roomRoutes);
