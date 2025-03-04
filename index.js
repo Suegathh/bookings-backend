@@ -11,55 +11,45 @@ const userRoutes = require("./routes/userRoutes");
 const app = express();
 const port = process.env.PORT || 5000;
 
-// Connect to database
+// ✅ Connect to Database
 connectDB();
 
-// ✅ Middleware (ORDER MATTERS)
-app.use(cookieParser()); // Handles cookies
-app.use(express.json()); // Parses JSON
-app.use(express.urlencoded({ extended: false })); // Parses form data
-
-// ✅ CORS Configuration (Make Sure It's Correct)
-
-// Allowed origins (include localhost for local development)
+// ✅ Allowed Origins (UPDATE WITH YOUR DEPLOYED FRONTEND URL)
 const allowedOrigins = [
-  "https://bookings-admin-one.vercel.app",
-  "https://bookings-client-three.vercel.app",
-  "http://localhost:3000", // Add this if testing locally
+  "https://bookings-client-three.vercel.app",  // Your frontend (Vercel)
+  "https://bookings-admin-one.vercel.app",    // Admin panel (if applicable)
+  "http://localhost:3000"  // Allow local development
 ];
 
+// ✅ CORS Middleware (MUST BE BEFORE ROUTES)
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, origin || "*"); // Allow if origin is in the list or request is server-side
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
+    origin: allowedOrigins,
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true, // Allow cookies (important for authentication)
+    optionsSuccessStatus: 204,
   })
 );
 
+// ✅ Other Middleware
+app.use(cookieParser()); 
+app.use(express.json()); 
+app.use(express.urlencoded({ extended: false }));
 
-// ✅ Handle Preflight Requests Manually
-app.options("*", cors());
-
-// ✅ Debugging Middleware (Check Headers Sent)
+// ✅ Debugging CORS Issues (Optional)
 app.use((req, res, next) => {
-  console.log("CORS Headers Sent:");
+  console.log("Incoming Request:");
   console.log("Origin:", req.headers.origin);
-  console.log("Allowed Origins:", allowedOrigins);
-  console.log("Headers:", res.getHeaders());
+  console.log("CORS Headers Set:", res.getHeaders());
   next();
 });
 
-// ✅ API Routes (AFTER CORS Middleware)
+// ✅ Routes
 app.use("/api/rooms", roomRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/users", userRoutes);
 
-// ✅ Default API Test Route
+// ✅ Default Route
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
