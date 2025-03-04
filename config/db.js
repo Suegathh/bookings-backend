@@ -2,15 +2,11 @@ const mongoose = require("mongoose");
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-
-    console.log(`✅ Connected to database: ${conn.connection.host}`);
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log("✅ MongoDB Connected...");
   } catch (error) {
-    console.error(`❌ Error connecting to database: ${error.message}`);
-    process.exit(1); // Exit process with failure
+    console.error("❌ MongoDB Connection Failed:", error);
+    process.exit(1);
   }
 };
 
