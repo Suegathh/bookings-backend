@@ -8,7 +8,7 @@ const router = Router();
 router.get("/", getRooms);
 
 // create room
-router.post("/", auth, createRoom);
+router.post("/",  createRoom);
 
 // get single room
 router.get("/:id", getRoom);
