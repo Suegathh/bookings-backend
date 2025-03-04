@@ -42,16 +42,19 @@ const createUser = async (req, res, next) => {
 
 const loginUser = async (req, res, next) => {
     try {
+      console.log('Login Request Body:', req.body);
       const { email, password } = req.body;
       const user = await User.findOne({ email });
   
       if (!user) {
+        console.log('User not found for email:', email);
         return res.status(400).json({ message: "User not found" });
       }
   
       const isCorrect = await bcrypt.compare(password, user.password);
   
       if (!isCorrect) {
+        console.log('Incorrect password for email:', email);
         return res.status(400).json({ message: "Incorrect password" });
       }
   
@@ -71,11 +74,13 @@ const loginUser = async (req, res, next) => {
       // Send user details back (excluding password)
       const { password: userPassword, ...userDetails } = user._doc;
   
+      console.log('Login Successful for user:', email);
       return res.status(200).json({
         ...userDetails,
         token // Include token in response
       });
     } catch (error) {
+      console.error('Login Error:', error);
       next(error);
     }
   };
