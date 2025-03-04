@@ -20,19 +20,27 @@ app.use(express.json()); // Parses JSON
 app.use(express.urlencoded({ extended: false })); // Parses form data
 
 // ✅ CORS Configuration (Make Sure It's Correct)
+
+// Allowed origins (include localhost for local development)
 const allowedOrigins = [
   "https://bookings-admin-one.vercel.app",
   "https://bookings-client-three.vercel.app",
+  "http://localhost:3000", // Add this if testing locally
 ];
 
 app.use(
   cors({
-    origin: allowedOrigins, // ✅ Allow only these origins
-    credentials: true, // ✅ Allow cookies & authentication headers
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, origin || "*"); // Allow if origin is in the list or request is server-side
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
   })
 );
+
 
 // ✅ Handle Preflight Requests Manually
 app.options("*", cors());
