@@ -1,8 +1,7 @@
-const dotenv = require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const path = require("path");
+const dotenv = require("dotenv").config();
 const { errorHandler } = require("./middleware/errorHandler");
 const connectDB = require("./config/db");
 const roomRoutes = require("./routes/roomRoutes");
@@ -15,7 +14,12 @@ const port = process.env.PORT || 5000;
 // Connect to database
 connectDB();
 
-// ✅ Setup CORS Properly
+// ✅ Middleware (ORDER MATTERS)
+app.use(cookieParser()); // Handles cookies
+app.use(express.json()); // Parses JSON
+app.use(express.urlencoded({ extended: false })); // Parses form data
+
+// ✅ CORS Configuration (Make Sure It's Correct)
 const allowedOrigins = [
   "https://bookings-admin-one.vercel.app",
   "https://bookings-client-three.vercel.app",
@@ -23,14 +27,8 @@ const allowedOrigins = [
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true, // ✅ Allow credentials (cookies, JWT)
+    origin: allowedOrigins, // ✅ Allow only these origins
+    credentials: true, // ✅ Allow cookies & authentication headers
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
@@ -39,19 +37,16 @@ app.use(
 // ✅ Handle Preflight Requests Manually
 app.options("*", cors());
 
-// ✅ Middleware
-app.use(cookieParser());
-app.use(express.json());
+// ✅ Debugging Middleware (Check Headers Sent)
 app.use((req, res, next) => {
-    console.log("Incoming Request:", req.method, req.url);
-    console.log("Origin:", req.headers.origin);
-    console.log("CORS Allowed Origins:", allowedOrigins);
-    console.log("Headers Sent:", res.getHeaders());
-    next();
-  });
-  
+  console.log("CORS Headers Sent:");
+  console.log("Origin:", req.headers.origin);
+  console.log("Allowed Origins:", allowedOrigins);
+  console.log("Headers:", res.getHeaders());
+  next();
+});
 
-// ✅ API Routes
+// ✅ API Routes (AFTER CORS Middleware)
 app.use("/api/rooms", roomRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/users", userRoutes);
