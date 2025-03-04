@@ -1,27 +1,34 @@
-const jwt = require("jsonwebtoken")
-const User = require("../models/userModel")
+const jwt = require("jsonwebtoken");
+const User = require("../models/userModel");
 
-const auth = async(req, res, next) => {
+const auth = async (req, res, next) => {
   try {
-    const token = req.cookies.jwt
-    if(!token){
-        return res.status(401).json({message: "not authorized"})
+    console.log("Cookies Received:", req.cookies); // 🔥 Debugging Step
+
+    const token = req.cookies.jwt; // 🔥 Ensure this cookie exists
+    if (!token) {
+      console.log("❌ No token found in cookies");
+      return res.status(401).json({ message: "Not authorized, no token" });
     }
 
-    const data = jwt.verify(token, process.env.JWT_SECRET)
+    //  Verify token
+    const data = jwt.verify(token, process.env.JWT_SECRET);
 
-   const user = await User.findById(data.id)
-   if(!user){
-    return res.status(400).json({message: "not authorized"})
-   }
-   req.user = user;
-   
-   next();
+    const user = await User.findById(data.id);
+
+    if (!user) {
+      console.log("❌ Token verification failed, user not found");
+      return res.status(401).json({ message: "Not authorized" });
+    }
+
+    req.user = user;
+    console.log("✅ User authenticated:", user.email);
+
+    next();
   } catch (error) {
-    console.log(error.message);
-    return res.status(400).json({message: "no token"})
+    console.log("❌ Auth error:", error.message);
+    return res.status(401).json({ message: "Token verification failed" });
   }
-}
-module.exports = {
-    auth,
-}
+};
+
+module.exports = { auth };

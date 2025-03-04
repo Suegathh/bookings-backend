@@ -1,51 +1,54 @@
-require("dotenv").config();
+const dotenv = require("dotenv").config();
 const express = require("express");
-const cors = require("cors");
+const cors = require("cors"); 
+const cookieParser = require("cookie-parser");
+const { errorHandler } = require("./middleware/errorHandler");
+const path = require("path");
 const connectDB = require("./config/db");
 const roomRoutes = require("./routes/roomRoutes");
-const { errorHandler } = require("./middleware/errorHandler");
 const bookingRoutes = require("./routes/bookingRoutes");
 const userRoutes = require("./routes/userRoutes");
-const cookieParser = require("cookie-parser");
 
-const app = express();
+const app = express(); // ✅ Initialize Express
 const port = process.env.PORT || 5000;
 
-// ✅ Allow both frontend URLs
-const allowedOrigins = [
-  process.env.CLIENT_URL || "https://bookings-client-three.vercel.app",
-  process.env.ADMIN_URL || "https://bookings-admin-one.vercel.app",
-];
+// Connect to database
+connectDB();
 
-const corsOptions = {
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.log(`Blocked by CORS: ${origin}`); // Debugging
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true, // ✅ Allows cookies & authentication headers
-    methods: ["GET", "POST", "PUT", "DELETE"], // ✅ Ensures all methods are allowed
-  };
-  
-  app.use(cors(corsOptions));
-  
-// Middleware
+// Setup middlewares
 app.use(cookieParser());
 app.use(express.json());
 
-// Routes
+app.use(
+    cors({
+      origin: [
+        'http://localhost:3000', 
+        'http://localhost:3001', 
+        'http://127.0.0.1:3001'
+      ],
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+    })
+  );
+
+
+// Setup routes
 app.use("/api/rooms", roomRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/users", userRoutes);
 
-// Default Route
-app.get("/", (req, res) => {
-  res.send("Backend is running...");
-});
+// Setup production
+if (process.env.NODE_ENV === "production") {
+  const publicpath = path.join(__dirname, ".", "build");
+  const filePath = path.resolve(__dirname, ".", "build", "index.html");
+  app.use(express.static(publicpath));
+
+  app.get("*", (req, res) => {
+    return res.sendFile(filePath);
+  });
+}
 
 app.use(errorHandler);
 
-app.listen(port, () => console.log(`Listening on port ${port}`));
+app.listen(port, () => console.log(`listening on port ${port}`));
