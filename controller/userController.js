@@ -86,26 +86,24 @@ const loginUser = async (req, res, next) => {
   };
   const logoutUser = async (req, res, next) => {
     try {
-      console.log('Logout Route Accessed');
-      
-      // Clear JWT cookie with comprehensive settings
+      console.log("Logout Route Accessed");
+      console.log("Cookies Before Logout:", req.cookies); // Debugging
+  
       res.cookie("jwt", "", {
         httpOnly: true,
         expires: new Date(0),
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "none", 
-        domain: '.vercel.app'
+        secure: true, 
+        sameSite: "None",
       });
   
-      // Respond with clear success message
-      return res.status(200).json({ 
-        success: true,
-        message: "Logged out successfully" 
-      });
+      console.log("Cookies After Logout:", res.getHeaders()["set-cookie"]); // Debugging
+  
+      return res.status(200).json({ success: true, message: "Logged out successfully" });
     } catch (error) {
-      console.error('Logout Error:', error);
-      next(error); // Pass to error handling middleware
+      console.error("Logout Error:", error);
+      next(error);
     }
+    
   };
 module.exports = {
   getUsers,
