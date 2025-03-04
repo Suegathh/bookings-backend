@@ -42,6 +42,14 @@ app.options("*", cors());
 // ✅ Middleware
 app.use(cookieParser());
 app.use(express.json());
+app.use((req, res, next) => {
+    console.log("Incoming Request:", req.method, req.url);
+    console.log("Origin:", req.headers.origin);
+    console.log("CORS Allowed Origins:", allowedOrigins);
+    console.log("Headers Sent:", res.getHeaders());
+    next();
+  });
+  
 
 // ✅ API Routes
 app.use("/api/rooms", roomRoutes);
