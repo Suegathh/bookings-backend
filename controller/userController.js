@@ -42,73 +42,72 @@ const createUser = async (req, res, next) => {
 };
 
 const loginUser = async (req, res, next) => {
-    try {
-      console.log("Login Request Body:", req.body);
-      const { email, password } = req.body;
-      const user = await User.findOne({ email });
-  
-      if (!user) {
-        console.log("❌ User not found for email:", email);
-        return res.status(400).json({ message: "User not found" });
-      }
-  
-      const isCorrect = await bcrypt.compare(password, user.password);
-  
-      if (!isCorrect) {
-        console.log("❌ Incorrect password for email:", email);
-        return res.status(400).json({ message: "Incorrect password" });
-      }
-  
-      // Generate token
-      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-        expiresIn: "1d",
-      });
-  
-      // Set cookie properly
-      res.cookie("jwt", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production", // Use HTTPS in production
-        sameSite: "None", // Fix for cross-origin requests
-        maxAge: 24 * 60 * 60 * 1000, // 1 day
-      });
-  
-      // Log cookie headers for debugging
-      console.log("✅ Set-Cookie Header:", res.getHeaders()["set-cookie"]);
-  
-      // Send user details back
-      const { password: userPassword, ...userDetails } = user._doc;
-  
-      return res.status(200).json({
-        ...userDetails,
-        token, // Also return token in JSON response for debugging
-      });
-    } catch (error) {
-      console.error("❌ Login Error:", error);
-      next(error);
+  try {
+    console.log("Login Request Body:", req.body);
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      console.log("❌ User not found for email:", email);
+      return res.status(400).json({ message: "User not found" });
     }
-  };
-  
-  const logoutUser = async (req, res, next) => {
-    try {
-      console.log("Logout Route Accessed");
-      console.log("Cookies Before Logout:", req.cookies); // Debugging
-  
-      res.cookie("jwt", "", {
-        httpOnly: true,
-        expires: new Date(0),
-        secure: true, 
-        sameSite: "None",
-      });
-  
-      console.log("Cookies After Logout:", res.getHeaders()["set-cookie"]); // Debugging
-  
-      return res.status(200).json({ success: true, message: "Logged out successfully" });
-    } catch (error) {
-      console.error("Logout Error:", error);
-      next(error);
+
+    const isCorrect = await bcrypt.compare(password, user.password);
+
+    if (!isCorrect) {
+      console.log("❌ Incorrect password for email:", email);
+      return res.status(400).json({ message: "Incorrect password" });
     }
-    
-  };
+
+    // Generate token
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1d",
+    });
+
+    // Set cookie properly
+    res.cookie("jwt", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // ✅ Only secure in production
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax", // ✅ Fix for CORS issues
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+    });
+
+    // Debug Set-Cookie header
+    console.log("✅ Set-Cookie Header:", res.getHeaders()["set-cookie"]);
+
+    // Remove password before sending response
+    const { password: userPassword, ...userDetails } = user._doc;
+
+    return res.status(200).json({
+      ...userDetails,
+      token, // Also return token for debugging
+    });
+  } catch (error) {
+    console.error("❌ Login Error:", error);
+    next(error);
+  }
+};
+
+const logoutUser = async (req, res, next) => {
+  try {
+    console.log("Logout Route Accessed");
+    console.log("Cookies Before Logout:", req.cookies); // Debugging
+
+    res.cookie("jwt", "", {
+      httpOnly: true,
+      expires: new Date(0),
+      secure: process.env.NODE_ENV === "production", 
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+    });
+
+    console.log("Cookies After Logout:", res.getHeaders()["set-cookie"]); // Debugging
+
+    return res.status(200).json({ success: true, message: "Logged out successfully" });
+  } catch (error) {
+    console.error("Logout Error:", error);
+    next(error);
+  }
+};
 module.exports = {
   getUsers,
   createUser,

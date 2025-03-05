@@ -4,14 +4,14 @@ const {
     createUser,
     loginUser, 
     logoutUser
- } = require('../controller/userController')
-const { auth } = require("../middleware/authMidlleware");
+} = require("../controller/userController");
+const { auth } = require("../middleware/authMiddleware"); // ✅ Fix import typo
 
 const router = Router();
 
-router.get("/", auth, getUsers)
-router.post("/", createUser)
-router.post("/login", loginUser)
-router.post("/logout", logoutUser)
+router.get("/", auth, getUsers); // ✅ Protected: Requires authentication
+router.post("/register", createUser); // ✅ Clearer path for registration
+router.post("/login", loginUser);
+router.post("/logout", logoutUser);
 
 module.exports = router;

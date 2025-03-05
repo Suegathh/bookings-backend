@@ -8,8 +8,9 @@
     "vercel-build": "npm install"
   },
   "engines": {
-    "node": "18.x"
-  },
+  "node": ">=18.x"
+}
+,
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.7",
