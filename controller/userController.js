@@ -42,19 +42,19 @@ const createUser = async (req, res, next) => {
 
 const loginUser = async (req, res, next) => {
     try {
-      console.log('Login Request Body:', req.body);
+      console.log("Login Request Body:", req.body);
       const { email, password } = req.body;
       const user = await User.findOne({ email });
   
       if (!user) {
-        console.log('User not found for email:', email);
+        console.log("❌ User not found for email:", email);
         return res.status(400).json({ message: "User not found" });
       }
   
       const isCorrect = await bcrypt.compare(password, user.password);
   
       if (!isCorrect) {
-        console.log('Incorrect password for email:', email);
+        console.log("❌ Incorrect password for email:", email);
         return res.status(400).json({ message: "Incorrect password" });
       }
   
@@ -63,27 +63,30 @@ const loginUser = async (req, res, next) => {
         expiresIn: "1d",
       });
   
-      // 🔥 Ensure cookie is sent correctly
+      // Set cookie properly
       res.cookie("jwt", token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production" ? true : false,
-        sameSite: "None", 
+        secure: process.env.NODE_ENV === "production", // Use HTTPS in production
+        sameSite: "None", // Fix for cross-origin requests
         maxAge: 24 * 60 * 60 * 1000, // 1 day
       });
   
-      // Send user details back (excluding password)
+      // Log cookie headers for debugging
+      console.log("✅ Set-Cookie Header:", res.getHeaders()["set-cookie"]);
+  
+      // Send user details back
       const { password: userPassword, ...userDetails } = user._doc;
   
-      console.log('Login Successful for user:', email);
       return res.status(200).json({
         ...userDetails,
-        token // Include token in response
+        token, // Also return token in JSON response for debugging
       });
     } catch (error) {
-      console.error('Login Error:', error);
+      console.error("❌ Login Error:", error);
       next(error);
     }
   };
+  
   const logoutUser = async (req, res, next) => {
     try {
       console.log("Logout Route Accessed");
