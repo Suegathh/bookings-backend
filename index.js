@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 require("dotenv").config();
-const errorHandler = require("./middleware/errorHandler"); // ✅ Ensure correct import
+const errorHandler = require("./middleware/errorHandler");
 
 const connectDB = require("./config/db");
 const roomRoutes = require("./routes/roomRoutes");
@@ -11,11 +11,6 @@ const userRoutes = require("./routes/userRoutes");
 
 // Initialize Express App
 const app = express();
-
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
 
 // ✅ CORS Configuration
 const allowedOrigins = [
@@ -33,13 +28,17 @@ app.use(
         callback(new Error("Not allowed by CORS"));
       }
     },
-    methods: "GET,POST,PUT,DELETE,OPTIONS",
-    allowedHeaders: "Content-Type,Authorization",
-    credentials: true
+    credentials: true, // ✅ Allows cookies & authentication
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // ✅ Allowed Methods
+    allowedHeaders: ["Content-Type", "Authorization"], // ✅ Allowed Headers
   })
 );
 
-app.options("*", cors()); 
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+
 // ✅ API Routes
 app.use("/api/rooms", roomRoutes);
 app.use("/api/bookings", bookingRoutes);
