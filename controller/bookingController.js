@@ -19,10 +19,11 @@ const getBookings = async (req, res, next) => {
   }
 };
 
-
 // Create a booking
 const createBooking = async (req, res, next) => {
   try {
+    console.log("📥 Received Booking Data:", req.body); // Debugging
+
     if (!req.body.roomId || !req.body.userId) {
       return res.status(400).json({ message: "Missing required fields" });
     }
@@ -34,6 +35,7 @@ const createBooking = async (req, res, next) => {
     next(error);
   }
 };
+
 
 // Update a booking
 const updateBooking = async (req, res, next) => {
@@ -82,11 +84,29 @@ const getBooking = async (req, res, next) => {
     next(error);
   }
 };
+const getBookingsByUser = async (req, res, next) => {
+  try {
+    console.log("Fetching bookings for user:", req.params.userId); // Debugging
+
+    const bookings = await Booking.find({ userId: req.params.userId }).populate("roomId");
+
+    if (!bookings.length) {
+      return res.status(404).json({ message: "No bookings found for this user" });
+    }
+
+    return res.status(200).json(bookings);
+  } catch (error) {
+    console.error("Error fetching user bookings:", error);
+    next(error);
+  }
+};
+
 
 module.exports = {
   getBookings,
   createBooking,
   updateBooking,
+  getBookingsByUser,
   deleteBooking,
   getBooking,
 };

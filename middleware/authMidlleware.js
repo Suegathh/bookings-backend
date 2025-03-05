@@ -3,17 +3,19 @@ const User = require("../models/userModel");
 
 const auth = async (req, res, next) => {
   try {
-    console.log("Cookies Received:", req.cookies); // 🔥 Debugging Step
+    console.log("Cookies Received:", req.cookies); 
 
-    const token = req.cookies.jwt; // 🔥 Ensure this cookie exists
+    let token = req.cookies.jwt; // First, check cookies
+    if (!token && req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
+      token = req.headers.authorization.split(" ")[1]; // Extract token from header
+    }
+
     if (!token) {
-      console.log("❌ No token found in cookies");
+      console.log("❌ No token found in cookies or headers");
       return res.status(401).json({ message: "Not authorized, no token" });
     }
 
-    //  Verify token
     const data = jwt.verify(token, process.env.JWT_SECRET);
-
     const user = await User.findById(data.id);
 
     if (!user) {
@@ -23,12 +25,12 @@ const auth = async (req, res, next) => {
 
     req.user = user;
     console.log("✅ User authenticated:", user.email);
-
     next();
   } catch (error) {
     console.log("❌ Auth error:", error.message);
     return res.status(401).json({ message: "Token verification failed" });
   }
 };
+
 
 module.exports = { auth };
