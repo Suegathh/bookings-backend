@@ -4,8 +4,8 @@ const jwt = require("jsonwebtoken");
 
 const getUsers = async (req, res, next) => {
   try {
-    const users = await User.find();
-    if (!users) {
+    const users = await User.find().select("-password"); // Exclude password field
+    if (!users || users.length === 0) {
       return res.status(400).json({ message: "Users not found" });
     }
     return res.status(200).json(users);
@@ -13,6 +13,7 @@ const getUsers = async (req, res, next) => {
     next(error);
   }
 };
+
 
 const createUser = async (req, res, next) => {
   try {
