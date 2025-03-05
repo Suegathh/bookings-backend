@@ -86,17 +86,45 @@ const getBooking = async (req, res, next) => {
 };
 const getBookingsByUser = async (req, res, next) => {
   try {
-    console.log("Fetching bookings for user:", req.params.userId); // Debugging
+    console.log("Fetching bookings for user ID:", req.params.userId);
+    console.log("Full request details:", {
+      params: req.params,
+      query: req.query,
+      body: req.body,
+      user: req.user // If you're using authentication middleware
+    });
 
-    const bookings = await Booking.find({ userId: req.params.userId }).populate("roomId");
+    const bookings = await Booking.find({ userId: req.params.userId })
+      .populate({
+        path: 'roomId',
+        select: 'name images' // Select specific fields from room
+      })
+      .sort({ createdAt: -1 }); // Sort by most recent first
+
+    console.log("Found Bookings:", {
+      count: bookings.length,
+      bookings: bookings.map(b => ({
+        _id: b._id,
+        roomName: b.roomId?.name,
+        checkInDate: b.checkInDate,
+        checkOutDate: b.checkOutDate
+      }))
+    });
 
     if (!bookings.length) {
-      return res.status(404).json({ message: "No bookings found for this user" });
+      return res.status(404).json({ 
+        message: "No bookings found for this user",
+        userId: req.params.userId 
+      });
     }
 
     return res.status(200).json(bookings);
   } catch (error) {
-    console.error("Error fetching user bookings:", error);
+    console.error("Error fetching user bookings:", {
+      userId: req.params.userId,
+      error: error.message,
+      stack: error.stack
+    });
     next(error);
   }
 };
