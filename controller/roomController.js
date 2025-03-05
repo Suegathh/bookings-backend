@@ -1,6 +1,3 @@
-const Room = require("../models/roomModel"); // Ensure you have the correct model
-
-// ✅ Create a Room
 const Room = require("../models/roomModel");
 
 // ✅ Create a Room
@@ -11,9 +8,9 @@ const createRoom = async (req, res) => {
     res.status(201).json(room);
   } catch (error) {
     console.error('Create Room Error:', error);
-    res.status(400).json({ 
+    res.status(400).json({
       message: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined 
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };
@@ -24,7 +21,7 @@ const getRooms = async (req, res) => {
     console.log('Get Rooms Request Headers:', req.headers);
     console.log('Incoming Request Origin:', req.headers.origin);
     console.log('Request Method:', req.method);
-
+    
     const rooms = await Room.find();
     
     console.log('Rooms Found:', rooms.length);
@@ -32,9 +29,9 @@ const getRooms = async (req, res) => {
     res.status(200).json(rooms);
   } catch (error) {
     console.error('Get Rooms Error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined 
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };
