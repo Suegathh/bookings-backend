@@ -11,24 +11,34 @@ const userRoutes = require("./routes/userRoutes");
 // Initialize Express App
 const app = express();
 
-// ✅ Log Incoming Requests
-app.use((req, res, next) => {
-  console.log(`🟢 Incoming request from: ${req.headers.origin}`);
-  next();
-});
+// ✅ Define Allowed Frontend Origins (Vercel + Localhost)
+const allowedOrigins = [
+  "https://bookings-client-three.vercel.app",
+  "https://bookings-admin-one.vercel.app",
+  "http://localhost:3000"
+];
 
-// ✅ Manually Set CORS Headers (Allow All Origins)
+// ✅ CORS Middleware (Manual Headers)
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*"); // Allow any origin
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true"); // ✅ Allows cookies/auth headers
+  }
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-  res.setHeader("Access-Control-Allow-Credentials", "true");
   
   // ✅ Handle Preflight Requests
   if (req.method === "OPTIONS") {
     return res.sendStatus(200);
   }
 
+  next();
+});
+
+// ✅ Log Incoming Requests
+app.use((req, res, next) => {
+  console.log(`🟢 Incoming request from: ${req.headers.origin}`);
   next();
 });
 
