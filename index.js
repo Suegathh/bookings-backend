@@ -1,5 +1,4 @@
 const express = require("express");
-const cors = require("cors");
 const cookieParser = require("cookie-parser");
 require("dotenv").config();
 const errorHandler = require("./middleware/errorHandler");
@@ -12,29 +11,26 @@ const userRoutes = require("./routes/userRoutes");
 // Initialize Express App
 const app = express();
 
+// ✅ Log Incoming Requests
+app.use((req, res, next) => {
+  console.log(`🟢 Incoming request from: ${req.headers.origin}`);
+  next();
+});
 
-// ✅ Define allowed origins
-const allowedOrigins = [
-  "https://bookings-admin-one.vercel.app",
-  "https://bookings-client-three.vercel.app",
-  "http://localhost:3000",
-];
+// ✅ Manually Set CORS Headers (Allow All Origins)
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*"); // Allow any origin
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  
+  // ✅ Handle Preflight Requests
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
 
-// ✅ CORS Middleware
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, origin); // ✅ Return the specific origin
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true, // ✅ Must be true when using cookies/sessions
-    methods: "GET,POST,PUT,DELETE,OPTIONS",
-    allowedHeaders: "Origin, X-Requested-With, Content-Type, Accept, Authorization",
-  })
-);
+  next();
+});
 
 // Middleware
 app.use(express.json());
