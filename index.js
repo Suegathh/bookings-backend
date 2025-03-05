@@ -12,25 +12,27 @@ const userRoutes = require("./routes/userRoutes");
 // Initialize Express App
 const app = express();
 
-// ✅ CORS Configuration
+
+// ✅ Define allowed origins
 const allowedOrigins = [
   "https://bookings-admin-one.vercel.app",
   "https://bookings-client-three.vercel.app",
   "http://localhost:3000",
 ];
 
+// ✅ CORS Middleware
 app.use(
   cors({
-    origin: (origin, callback) => {
+    origin: function (origin, callback) {
       if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
+        callback(null, origin); // ✅ Return the specific origin
       } else {
         callback(new Error("Not allowed by CORS"));
       }
     },
-    credentials: true, // ✅ Allows cookies & authentication
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // ✅ Allowed Methods
-    allowedHeaders: ["Content-Type", "Authorization"], // ✅ Allowed Headers
+    credentials: true, // ✅ Must be true when using cookies/sessions
+    methods: "GET,POST,PUT,DELETE,OPTIONS",
+    allowedHeaders: "Origin, X-Requested-With, Content-Type, Accept, Authorization",
   })
 );
 
