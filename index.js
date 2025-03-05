@@ -1,20 +1,33 @@
+// Global Error Handling
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('🚨 Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('🚨 Uncaught Exception:', error);
+});
+
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const dotenv = require("dotenv").config();
+require("dotenv").config();
+
 const { errorHandler } = require("./middleware/errorHandler");
 const connectDB = require("./config/db");
 const roomRoutes = require("./routes/roomRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const userRoutes = require("./routes/userRoutes");
 
+// Initialize Express App
 const app = express();
-const port = process.env.PORT || 5000;
 
-// ✅ Connect to Database
-connectDB();
+// Enhanced Logging Middleware
+app.use((req, res, next) => {
+  console.log(`📡 Request: ${req.method} ${req.path}`);
+  next();
+});
 
-// ✅ Define Allowed Origins with Environment-based Configuration
+// Define Allowed Origins
 const allowedOrigins = 
   process.env.NODE_ENV === 'production'
     ? [
@@ -23,13 +36,14 @@ const allowedOrigins =
       ]
     : ["http://localhost:3000", "http://127.0.0.1:3000"];
 
-// ✅ Comprehensive CORS Configuration
+// CORS Configuration
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
+    console.log(`🌐 Incoming Origin: ${origin}`);
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
+      console.warn(`❌ CORS Blocked: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -44,66 +58,65 @@ const corsOptions = {
   ]
 };
 
-// ✅ Apply CORS Middleware
+// Middleware
 app.use(cors(corsOptions));
+app.use(cookieParser());
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
-// ✅ Middleware (ORDER MATTERS)
-app.use(cookieParser()); // Handles cookies
-app.use(express.json()); // Parses JSON
-app.use(express.urlencoded({ extended: false })); // Parses form data
-
-// ✅ Debugging Middleware (Optional, can be removed in production)
-if (process.env.NODE_ENV !== 'production') {
-  app.use((req, res, next) => {
-    console.log("🔍 CORS Debugging:");
-    console.log("Request Origin:", req.headers.origin);
-    console.log("Allowed Origins:", allowedOrigins);
-    console.log("Request Method:", req.method);
-    next();
-  });
-}
-
-// ✅ Explicit CORS Headers for Additional Security
+// Enhanced Security Headers
 app.use((req, res, next) => {
   res.header("X-Content-Type-Options", "nosniff");
   res.header("X-Frame-Options", "DENY");
   res.header("X-XSS-Protection", "1; mode=block");
+  res.header("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
   next();
 });
 
-// ✅ API Routes
+// API Routes
 app.use("/api/rooms", roomRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/users", userRoutes);
 
-// ✅ Default API Test Route
+// Default Route
 app.get("/", (req, res) => {
-  res.send("API is running...");
+  res.status(200).json({
+    message: "API is running...",
+    timestamp: new Date().toISOString()
+  });
 });
 
-// ✅ 404 Handler for undefined routes
+// 404 Handler
 app.use((req, res, next) => {
   res.status(404).json({
     error: "Not Found",
-    path: req.path
+    path: req.path,
+    timestamp: new Date().toISOString()
   });
 });
 
-// ✅ Error Handling Middleware
+// Error Handling Middleware
 app.use(errorHandler);
 
-// ✅ Graceful Shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received. Shutting down gracefully');
-  server.close(() => {
-    console.log('Process terminated');
-  });
-});
-
-// ✅ Start Server
-const server = app.listen(port, () => {
-  console.log(`🚀 Server running on port ${port}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+// Vercel Serverless Function Handler
+const serverlessHandler = async (req, res) => {
+  try {
+    // Ensure database connection
+    await connectDB();
+    
+    // Log serverless invocation
+    console.log(`🚀 Serverless Invocation: ${req.method} ${req.path}`);
+    
+    // Process request through Express app
+    return app(req, res);
+  } catch (error) {
+    console.error('🔥 Serverless Handler Error:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: error.message
+    });
+  }
+};
 
 module.exports = app;
+module.exports.handler = serverlessHandler;
